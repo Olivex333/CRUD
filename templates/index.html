@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie-heritage">
+    <title>Data editor - CRUD</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 p-4">
+<div class="flex justify-center items-center min-h-screen">
+    <div class="bg-white rounded-lg shadow-lg p-4">
+        <table class="table-auto">
+            <thead>
+            <tr>
+                <th class="px-4 py-2">ID</th>
+                <th class="px-4 py-2">Name</th>
+                <th class="px-4 py-2">Middlename</th>
+                <th class="px-4 py-2">Login</th>
+                <th class="px-4 py-2">Email</th>
+                <th class="px-4 py-2">Address</th>
+                <th class="px-4 py-2">Akcje</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for item in data %}
+                <tr>
+                    <td class="border px-4 py-2">{{ item._id }}</td>
+                    <td class="border px-4 py-2" id="name_{{ item._id }}">{{ item.Name }}</td>
+                    <td class="border px-4 py-2" id="middlename_{{ item._id }}">{{ item.Middlename }}</td>
+                    <td class="border px-4 py-2" id="login_{{ item._id }}">{{ item.Login }}</td>
+                    <td class="border px-4 py-2" id="email_{{ item._id }}">{{ item.Email }}</td>
+                    <td class="border px-4 py-2" id="address_{{ item._id }}">{{ item.Address }}</td>
+                    <td class="border px-4 py-2">
+                        <button class="bg-red-500 hover-bg-red-700 text-white font-bold py-1 px-2 rounded-full flex items-center delete-btn" data-id="{{ item._id }}">
+                            <span class="mr-1">🗑</span> Usuń
+                        </button>
+                        <button class="bg-green-500 hover-bg-green-700 text-white font-bold py-1 px-2 rounded-full flex items-center update-btn" data-id="{{ item._id }}">
+                            <span class="mr-1">🔄</span> Update
+                        </button>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <form id="addForm" class="mt-4">
+            <input type="text" id="newName" name="name" placeholder="Name" required>
+            <input type="text" id="newMiddlename" name="middlename" placeholder="Middlename">
+            <input type="text" id="newLogin" name="login" placeholder="Login">
+            <input type="email" id="newEmail" name "email" placeholder="Email">
+            <input type="text" id="newAddress" name="address" placeholder="Address">
+            <button type="submit" class="bg-blue-500 hover-bg-blue-700 text-white font-bold py-2 px-4 rounded-full flex items-center">
+                <span class="mr-2">+</span> Dodaj
+            </button>
+        </form>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(".update-btn").click(function () {
+        var id = $(this).data("id");
+        var name = $("#name_" + id).text();
+        var middlename = $("#middlename_" + id).text();
+        var login = $("#login_" + id).text();
+        var email = $("#email_" + id).text();
+        var address = $("#address_" + id).text();
+        var newName = prompt("Wprowadź nową wartość Name:", name);
+        var newMiddlename = prompt("Wprowadź nową wartość Middlename:", middlename);
+        var newLogin = prompt("Wprowadź nową wartość Login:", login);
+        var newEmail = prompt("Wprowadź nową wartość Email:", email);
+        var newAddress = prompt("Wprowadź nową wartość Address:", address);
+        if (newName !== null) {
+            $("#name_" + id).text(newName);
+            $("#middlename_" + id).text(newMiddlename);
+            $("#login_" + id).text(newLogin);
+            $("#email_" + id).text(newEmail);
+            $("#address_" + id).text(newAddress);
+            $.post('/update/' + id, {
+                name: newName,
+                middlename: newMiddlename,
+                login: newLogin,
+                email: newEmail,
+                address: newAddress
+            }, function (data) {
+                if (data.success) {
+                    alert('Rekord został zaktualizowany.');
+                } else {
+                    alert('Wystąpił błąd podczas aktualizacji rekordu.');
+                }
+            });
+        }
+    });
+
+    $(".delete-btn").click(function () {
+        var id = $(this).data("id");
+        $.ajax({
+            type: 'POST',
+            url: '/delete/' + id,
+            success: function (data) {
+                if (data.success) {
+                    $(this).closest('tr').remove();
+                    alert('Rekord został usunięty.');
+                } else {
+                    alert('Wystąpił błąd podczas usuwania rekordu: ' + data.error);
+                }
+            }.bind(this),
+            error: function () {
+                alert('Wystąpił błąd podczas komunikacji z serwerem.');
+            }
+        });
+    });
+
+    $("#addForm").submit(function (e) {
+        e.preventDefault();
+        var newName = $("#newName").val();
+        var newMiddlename = $("#newMiddlename").val();
+        var newLogin = $("#newLogin").val();
+        var newEmail = $("#newEmail").val();
+        var newAddress = $("#newAddress").val();
+        $.post('/add', {
+            name: newName,
+            middlename: newMiddlename,
+            login: newLogin,
+            email: newEmail,
+            address: newAddress
+        }, function (data) {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Wystąpił błąd podczas dodawania rekordu.');
+            }
+        });
+    });
+</script>
+</body>
+</html>
